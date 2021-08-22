@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
+  Req,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -9,6 +11,10 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/createUser.dto';
 import { UserResponseInterface } from './types/userResponse.interface';
 import { LoginUserDto } from './dto/loginUser.dto';
+import { Request } from 'express';
+import { ExpressRequestInterface } from '../types/expressRequest.interface';
+import { User } from './decorators/user.decorator';
+import { UserEntity } from './user.entity';
 
 @Controller()
 export class UserController {
@@ -29,6 +35,13 @@ export class UserController {
     @Body('user') loginUserDto: LoginUserDto,
   ): Promise<UserResponseInterface> {
     const user = await this.userService.login(loginUserDto);
+    return this.userService.buildUserResponse(user);
+  }
+
+  @Get('/user')
+  async getCurrentUser(
+    @User() user: UserEntity,
+  ): Promise<UserResponseInterface> {
     return this.userService.buildUserResponse(user);
   }
 }
