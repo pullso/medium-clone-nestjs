@@ -41,7 +41,7 @@ export class UserService {
   generateJWT(user: UserEntity): string {
     return sign(
       {
-        user: user.id,
+        id: user.id,
         username: user.username,
         email: user.email,
       },
