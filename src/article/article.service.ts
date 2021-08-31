@@ -5,6 +5,7 @@ import { ArticleEntity } from './article.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ArticleResponseInterface } from './types/articleResponse.interface';
+import slugify from 'slugify';
 
 @Injectable()
 export class ArticleService {
@@ -18,7 +19,7 @@ export class ArticleService {
   ): Promise<ArticleEntity> {
     const article = new ArticleEntity();
     Object.assign(article, createArticleDto);
-    article.slug = 'foo';
+    article.slug = ArticleService.getSlug(createArticleDto.title);
     if (!article.tagList) article.tagList = [];
     article.author = currentUser;
 
@@ -27,5 +28,13 @@ export class ArticleService {
 
   buildArticleResponse(article: ArticleEntity): ArticleResponseInterface {
     return { article };
+  }
+
+  private static getSlug(title: string): string {
+    return (
+      slugify(title, { lower: true }) +
+      '-' +
+      ((Math.random() * Math.pow(36, 6)) | 0).toString(36)
+    );
   }
 }
