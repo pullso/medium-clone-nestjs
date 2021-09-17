@@ -46,14 +46,45 @@ export class ArticleService {
       });
     }
 
+    if (query.favorited) {
+      const author = await this.userRepository.findOne(
+        {
+          username: query.favorited,
+        },
+        { relations: ['favorites'] },
+      );
+      const ids = author.favorites.map((el) => el.id);
+      if (ids.length > 0) {
+        queryBuilder.andWhere('articles.id IN (:...ids)', { ids });
+      } else {
+        queryBuilder.andWhere('1=0');
+      }
+    }
+
     if (query.tag) {
       queryBuilder.andWhere('articles.tagList LIKE :tag', {
         tag: `%${query.tag}%`,
       });
     }
 
+    let favoriteIds: number[] = [];
+    if (currentUserId) {
+      const currentUser = await this.userRepository.findOne(
+        {
+          id: currentUserId,
+        },
+        { relations: ['favorites'] },
+      );
+      favoriteIds = currentUser.favorites.map((el) => el.id);
+    }
+
     const articles = await queryBuilder.getMany();
-    return { articles, articlesCount };
+    const articleWithFavorites = articles.map((article) => {
+      const favorited = favoriteIds.includes(article.id);
+      return { ...article, favorited };
+    });
+
+    return { articles: articleWithFavorites, articlesCount };
   }
 
   async createArticle(
